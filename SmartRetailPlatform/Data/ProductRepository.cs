@@ -28,4 +28,28 @@ public class ProductRepository
 
         return null;
     }
+
+    public async Task<List<Product>> GetAllAsync()
+    {
+        var products = new List<Product>();
+
+        await using var connection = new NpgsqlConnection(DbConfig.ConnectionString);
+        await connection.OpenAsync();
+
+        const string sql = "SELECT id , name , price , stock FROM products ORDER BY id";
+
+        await using var cmd = new NpgsqlCommand(sql, connection);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            string name =  reader.GetString(1);
+            decimal price = reader.GetDecimal(2);
+            int stock = reader.GetInt32(3);
+            
+            products.Add(new Product(name, price, stock));
+            
+        }
+        return products;
+    }
 }
